@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Prediction = () => {
 	const [model, setModel] = useState(null);
@@ -12,28 +13,21 @@ const Prediction = () => {
 	const handlePredict = async () => {
 		setLoading(true); // Start loading when the request is made
 		setError(null); // Clear previous errors
-		const res = await fetch('https://npk-tester-api.vercel.app/predict', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				features: [data[0].nitrogen, data[0].phosphorus, data[0].potassium], // Use the fetched data
-			}),
+		const res = await axios.post('https://npktester-api.onrender.com/predict', {
+			features: [data[0].nitrogen, data[0].phosphorus, data[0].potassium],
 		});
-
+		console.log('Response:', res);
 		setLoading(false); // Stop loading once the request is done
 
-		if (!res.ok) {
-			const errorData = await res.json();
-			console.error('Error during prediction:', errorData.error);
-			setError(errorData.error); // Display the error message in the UI
+		if (!res.status == 200) {
 			setResult(null);
+			setRecommendation(null);
 		} else {
-			const data = await res.json();
-			console.log('Prediction Result:', data[1]);
-			setResult(data[0].prediction); // Display the predicted crop
+			console.log('Prediction Result:', res.data[1]);
+			setResult(res.data[0].prediction); // Display the predicted crop
 			setRecommendation(
 				`
-				( N: ${data[1].needed_nutrients.N}, P: ${data[1].needed_nutrients.P}, K: ${data[1].needed_nutrients.K} )`
+				( N: ${res.data[1].needed_nutrients.N}, P: ${res.data[1].needed_nutrients.P}, K: ${res.data[1].needed_nutrients.K} )`
 			);
 		}
 	};
@@ -45,19 +39,18 @@ const Prediction = () => {
 		setResult(null);
 		setRecommendation(null);
 		setError(null);
-		const res = await fetch('https://npk-tester-api.vercel.app/sensordata');
+		const res = await axios.get(
+			'https://npktester-api.onrender.com/sensordata'
+		);
+		console.log('Response:', res.status);
 
 		setLoading(false);
 
-		if (!res.ok) {
-			const errorData = await res.json();
-			console.error('Error fetching data:', errorData.error);
-			setError(errorData.error);
+		if (!res.status == 200) {
 			setData([]);
 		} else {
-			const fetchedData = await res.json();
-			console.log('Fetched Data:', fetchedData);
-			setData(fetchedData); // Update state with fetched data
+			console.log('Fetched Data:', res.data);
+			setData(res.data); // Update state with fetched data
 		}
 	};
 
