@@ -24,15 +24,13 @@ const Prediction = () => {
 			setRecommendation(null);
 		} else {
 			// Set the prediction
-			setResult(res.data.prediction);
-
-			// Optional: handle needed nutrients if they exist
 			if (res.data.length > 1 && res.data[1].needed_nutrients) {
 				setResult(res.data[0].prediction);
 
 				setRecommendation(`
 					( N: ${res.data[1]?.needed_nutrients.N}, P: ${res.data[1]?.needed_nutrients.P}, K: ${res.data[1]?.needed_nutrients.K} )`);
 			}
+			setResult(res.data.prediction);
 		}
 	};
 
