@@ -13,22 +13,26 @@ const Prediction = () => {
 	const handlePredict = async () => {
 		setLoading(true); // Start loading when the request is made
 		setError(null); // Clear previous errors
-		const res = await axios.post('https://npktester-api.onrender.com/predict', {
+		const res = await axios.post('http://127.0.0.1:5000/predict', {
 			features: [data[0].nitrogen, data[0].phosphorus, data[0].potassium],
 		});
-		console.log('Response:', res);
+
 		setLoading(false); // Stop loading once the request is done
 
 		if (!res.status == 200) {
 			setResult(null);
 			setRecommendation(null);
 		} else {
-			console.log('Prediction Result:', res.data[1]);
-			setResult(res.data[0].prediction); // Display the predicted crop
-			setRecommendation(
-				`
-				( N: ${res.data[1].needed_nutrients.N}, P: ${res.data[1].needed_nutrients.P}, K: ${res.data[1].needed_nutrients.K} )`
-			);
+			// Set the prediction
+			setResult(res.data.prediction);
+
+			// Optional: handle needed nutrients if they exist
+			if (res.data.length > 1 && res.data[1].needed_nutrients) {
+				setResult(res.data[0].prediction);
+
+				setRecommendation(`
+					( N: ${res.data[1]?.needed_nutrients.N}, P: ${res.data[1]?.needed_nutrients.P}, K: ${res.data[1]?.needed_nutrients.K} )`);
+			}
 		}
 	};
 
@@ -42,14 +46,12 @@ const Prediction = () => {
 		const res = await axios.get(
 			'https://npktester-api.onrender.com/sensordata'
 		);
-		console.log('Response:', res.status);
 
 		setLoading(false);
 
 		if (!res.status == 200) {
 			setData([]);
 		} else {
-			console.log('Fetched Data:', res.data);
 			setData(res.data); // Update state with fetched data
 		}
 	};
