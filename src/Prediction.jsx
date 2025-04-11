@@ -13,7 +13,7 @@ const Prediction = () => {
 	const handlePredict = async () => {
 		setLoading(true); // Start loading when the request is made
 		setError(null); // Clear previous errors
-		const res = await axios.post('http://127.0.0.1:5000/predict', {
+		const res = await axios.post('https://npktester-api.onrender.com/predict', {
 			features: [data[0].nitrogen, data[0].phosphorus, data[0].potassium],
 		});
 
