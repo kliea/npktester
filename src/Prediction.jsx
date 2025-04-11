@@ -25,10 +25,10 @@ const Prediction = () => {
 		} else {
 			// Set the prediction
 			console.log(res.data);
-			if (res.data.length > 1 && res.data[1].needed_nutrients) {
-				setResult(res.data[0].prediction);
+			if (res.data.needed_nutrients) {
+				setResult(res.data.prediction);
 				setRecommendation(`
-					( N: ${res.data[1]?.needed_nutrients.N}, P: ${res.data[1]?.needed_nutrients.P}, K: ${res.data[1]?.needed_nutrients.K} )`);
+					( N: ${res.data?.needed_nutrients.N}, P: ${res.data?.needed_nutrients.P}, K: ${res.data?.needed_nutrients.K} )`);
 			}
 			setResult(res.data.prediction);
 		}
