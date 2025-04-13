@@ -42,7 +42,7 @@ const Prediction = () => {
 		const res = await axios.get(
 			'https://npktester-api.onrender.com/sensordata'
 		);
-
+		console.log(res);
 		setIsFetching(false);
 
 		if (!res.status == 200) {
