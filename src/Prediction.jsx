@@ -14,8 +14,8 @@ const Prediction = () => {
 	const handlePredict = async () => {
 		setIsPredicting(true); // Start loading when the request is made
 		setError(null); // Clear previous errors
-		const res = await axios.post('https://npktester-api.onrender.com/predict', {
-			features: [data[0].nitrogen, data[0].phosphorus, data[0].potassium],
+		const res = await axios.post('http://127.0.0.1:5000/predict', {
+			features: [data.nitrogen, data.phosphorus, data.potassium],
 		});
 
 		setIsPredicting(false); // Stop loading once the request is done
@@ -24,8 +24,6 @@ const Prediction = () => {
 			setResult(null);
 			setRecommendation(null);
 		} else {
-			// Set the prediction
-			console.log(res.data);
 			if (res.data.needed_nutrients) {
 				setResult(res.data.prediction);
 				setRecommendation(`
@@ -35,16 +33,13 @@ const Prediction = () => {
 		}
 	};
 
-	// Fetch data from backend (Supabase, for example)
 	const fetchData = async () => {
 		setIsFetching(true);
 
 		setResult(null);
 		setRecommendation(null);
 		setError(null);
-		const res = await axios.get(
-			'https://npktester-api.onrender.com/sensordata'
-		);
+		const res = await axios.get('http://127.0.0.1:5000/sensordata');
 
 		setIsFetching(false);
 
@@ -71,25 +66,25 @@ const Prediction = () => {
 				)}
 
 				<div className='mt-4'>
-					{data.length > 0 ? (
+					{data ? (
 						<>
 							<div>
 								<h4>Sensor Data:</h4>
 								<ul className='list-unstyled'>
 									<li>
-										<strong>Nitrogen:</strong> {data[0].nitrogen}
+										<strong>Nitrogen:</strong> {data.nitrogen}
 									</li>
 									<li>
-										<strong>Phosphorus:</strong> {data[0].phosphorus}
+										<strong>Phosporous:</strong> {data.phosphorus}
 									</li>
 									<li>
-										<strong>Potassium:</strong> {data[0].potassium}
+										<strong>Potassium:</strong> {data.potassium}
 									</li>
 								</ul>
 							</div>
 							<h4>
 								<strong>Moisture Data: </strong>
-								{data[0].soilMoisture}
+								{data.soil}
 							</h4>
 						</>
 					) : (
