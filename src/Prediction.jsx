@@ -14,7 +14,7 @@ const Prediction = () => {
 	const handlePredict = async () => {
 		setIsPredicting(true); // Start loading when the request is made
 		setError(null); // Clear previous errors
-		const res = await axios.post('http://127.0.0.1:5000/predict', {
+		const res = await axios.post('https://npktester-api.onrender.com/predict', {
 			features: [data.nitrogen, data.phosphorus, data.potassium],
 		});
 
@@ -39,7 +39,9 @@ const Prediction = () => {
 		setResult(null);
 		setRecommendation(null);
 		setError(null);
-		const res = await axios.get('http://127.0.0.1:5000/sensordata');
+		const res = await axios.get(
+			'https://npktester-api.onrender.com/sensordata'
+		);
 
 		setIsFetching(false);
 
