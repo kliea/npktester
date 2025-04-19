@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	Tooltip,
+	ResponsiveContainer,
+	CartesianGrid,
+} from 'recharts';
 
 const Prediction = () => {
 	const [model, setModel] = useState(null);
@@ -52,9 +61,14 @@ const Prediction = () => {
 		}
 	};
 
+	const chartData = [
+		{ name: 'Nitrogen', value: data.nitrogen || 0 },
+		{ name: 'Phosphorus', value: data.phosphorus || 0 },
+		{ name: 'Potassium', value: data.potassium || 0 },
+	];
 	return (
-		<div className='p-4'>
-			<div className='mt-4'>
+		<div className='p-2'>
+			<div className=''>
 				<button
 					onClick={fetchData}
 					className='btn btn-primary px-4 py-2 rounded'>
@@ -62,37 +76,48 @@ const Prediction = () => {
 				</button>
 
 				{error && (
-					<div className='mt-3 alert alert-danger'>
+					<div className='mt-2 alert alert-danger'>
 						<p className='mb-0'>Error: {error}</p>
 					</div>
 				)}
 
-				<div className='mt-4'>
-					{data ? (
-						<>
-							<div>
-								<h4>Sensor Data:</h4>
-								<ul className='list-unstyled'>
+				{data ? (
+					<>
+						{/* Sensor Data */}
+						{data && data.nitrogen !== undefined && (
+							<>
+								<h3 className='text-lg font-medium mb-2'>Sensor Readings</h3>
+								<ul className='mb-4'>
 									<li>
 										<strong>Nitrogen:</strong> {data.nitrogen}
 									</li>
 									<li>
-										<strong>Phosporous:</strong> {data.phosphorus}
+										<strong>Phosphorus:</strong> {data.phosphorus}
 									</li>
 									<li>
 										<strong>Potassium:</strong> {data.potassium}
 									</li>
+									<li>
+										<strong>Soil Moisture:</strong> {data.soil}
+									</li>
 								</ul>
-							</div>
-							<h4>
-								<strong>Moisture Data: </strong>
-								{data.soil}
-							</h4>
-						</>
-					) : (
-						<p>No data found</p>
-					)}
-				</div>
+
+								{/* Chart */}
+								<ResponsiveContainer width='100%' height={250}>
+									<BarChart data={chartData}>
+										<CartesianGrid strokeDasharray='3 3' />
+										<XAxis dataKey='name' />
+										<YAxis />
+										<Tooltip />
+										<Bar dataKey='value' fill='#82ca9d' />
+									</BarChart>
+								</ResponsiveContainer>
+							</>
+						)}
+					</>
+				) : (
+					<p>No data found</p>
+				)}
 			</div>
 
 			<div className='mt-5'>

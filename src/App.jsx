@@ -11,7 +11,7 @@ function App() {
 				<h1 className='display-5 display-sm-4 font-weight-bold text-center text-primary mb-4'>
 					Plant Recommendation System
 				</h1>
-				<p className='text-center text-muted mb-4'>
+				<p className='text-center text-muted'>
 					Discover the best plants for your environment based on NPK values!
 				</p>
 				<Prediction />
