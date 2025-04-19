@@ -51,7 +51,7 @@ const Prediction = () => {
 		const res = await axios.get(
 			'https://npktester-api.onrender.com/sensordata'
 		);
-		console.log(res);
+		console.log(res.data);
 		setIsFetching(false);
 
 		if (!res.status == 200) {
@@ -119,14 +119,14 @@ const Prediction = () => {
 					<p>No data found</p>
 				)}
 			</div>
-
 			<div className='mt-5'>
-				<button
-					onClick={handlePredict}
-					className='btn btn-success px-4 py-2 rounded'>
-					{isPredicting ? 'Calculating...' : 'Recommended Plant'}
-				</button>
-
+				{data.nitrogen && (
+					<button
+						onClick={handlePredict}
+						className='btn btn-success px-4 py-2 rounded'>
+						{isPredicting ? 'Calculating...' : 'Recommended Plant'}
+					</button>
+				)}
 				{result && !isPredicting && (
 					<div className='mt-4 alert alert-info'>
 						<p>
