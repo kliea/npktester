@@ -47,8 +47,8 @@ const Prediction = () => {
 			setError(null);
 
 			const res = await axios.post(
-				// 'https://npktester-api.onrender.com/predict'
-				'http://localhost:5000/predict',
+				'https://npktester-api.onrender.com/predict',
+				// 'http://localhost:5000/sensordata',
 				{
 					features: [data.nitrogen, data.phosphorus, data.potassium],
 				}
@@ -81,8 +81,8 @@ const Prediction = () => {
 			setError(null);
 
 			const res = await axios.get(
-				// 'https://npktester-api.onrender.com/sensordata'
-				'http://localhost:5000/sensordata'
+				'https://npktester-api.onrender.com/sensordata'
+				// 'http://localhost:5000/sensordata'
 			);
 			if (res.status === 200) {
 				setData(res.data);
@@ -237,7 +237,7 @@ const Prediction = () => {
 			{result && !isPredicting && (
 				<div className='mt-5'>
 					<h3 className='text-lg font-medium text-center'>
-						Recommended Crop: {result}
+						Recommended Crop: <span className='text-uppercase'>{result}</span>
 					</h3>
 					<div className='mt-3'>
 						{imageUrl && (
@@ -249,25 +249,30 @@ const Prediction = () => {
 								transition={{ duration: 0.3 }}
 							/>
 						)}
-						{recommendation && (
-							<div className='d-flex flex-wrap justify-content-center gap-3 mt-4'>
-								{sortedRecommendation.length > 0 ? (
-									sortedRecommendation.map((item, index) => (
-										<span
-											key={index}
-											className={`badge rounded-pill ${
-												nutrientColors[item.name] || 'bg-secondary'
-											} text-light px-4 py-2`}>
-											{item.name}: {item.value} kg/ha
-										</span>
-									))
-								) : (
-									<p className='text-center text-muted'>
-										No recommendations available.
-									</p>
-								)}
-							</div>
-						)}
+						<div>
+							<h3 className='text-lg font-medium text-center'>
+								Fertilizer Recommendation
+							</h3>
+							{recommendation && (
+								<div className='d-flex flex-wrap justify-content-center gap-3 mt-4'>
+									{sortedRecommendation.length > 0 ? (
+										sortedRecommendation.map((item, index) => (
+											<span
+												key={index}
+												className={`badge rounded-pill ${
+													nutrientColors[item.name] || 'bg-secondary'
+												} text-light px-4 py-2`}>
+												{item.name}: {item.value} kg/ha
+											</span>
+										))
+									) : (
+										<p className='text-center text-muted'>
+											No recommendations available.
+										</p>
+									)}
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 			)}
