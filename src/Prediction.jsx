@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import {
 	BarChart,
@@ -8,139 +8,269 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 	CartesianGrid,
+	LabelList,
 } from 'recharts';
+import { motion } from 'framer-motion';
+import GaugeChart from 'react-gauge-chart';
+
+const plantImages = {
+	rice: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Rice_Harvest_2020_-_50248678242.jpg',
+	maize:
+		'https://upload.wikimedia.org/wikipedia/commons/0/0d/Starr-120606-7054-Zea_mays-ears_for_sale-Laulima_Farm_Kipahulu-Maui_%2825026486812%29.jpg',
+	kidneybeans:
+		'https://upload.wikimedia.org/wikipedia/commons/a/ac/Sa_kidneybeans.jpg',
+	mungbean:
+		'https://upload.wikimedia.org/wikipedia/commons/f/f2/Sa_green_gram.jpg',
+	banana:
+		'https://upload.wikimedia.org/wikipedia/commons/7/77/Banana_d%C3%A1gua.jpg',
+	mango: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Hapus_Mango.jpg',
+	orange:
+		'https://upload.wikimedia.org/wikipedia/commons/c/c4/Orange-Fruit-Pieces.jpg',
+	papaya: 'https://upload.wikimedia.org/wikipedia/commons/1/13/Papaya.svg',
+	coconut:
+		'https://upload.wikimedia.org/wikipedia/commons/d/dc/Coconut_tree_06264.JPG',
+	coffee:
+		'https://upload.wikimedia.org/wikipedia/commons/c/c5/Roasted_coffee_beans.jpg',
+};
 
 const Prediction = () => {
-	const [model, setModel] = useState(null);
 	const [result, setResult] = useState(null);
-	const [recommendation, setRecommendation] = useState(null);
+	const [recommendation, setRecommendation] = useState([]);
 	const [data, setData] = useState([]);
-	const [isFetching, setIsFetching] = useState(false); // Loading state for fetching data
-	const [isPredicting, setIsPredicting] = useState(false); // Loading state for prediction
-	const [error, setError] = useState(null); // For displaying errors
+	const [isFetching, setIsFetching] = useState(false);
+	const [isPredicting, setIsPredicting] = useState(false);
+	const [error, setError] = useState(null);
 
-	// This function sends features to the backend and gets predictions
 	const handlePredict = async () => {
-		setIsPredicting(true); // Start loading when the request is made
-		setError(null); // Clear previous errors
-		const res = await axios.post('https://npktester-api.onrender.com/predict', {
-			features: [data.nitrogen, data.phosphorus, data.potassium],
-		});
+		try {
+			setIsPredicting(true);
+			setError(null);
 
-		setIsPredicting(false); // Stop loading once the request is done
+			const res = await axios.post(
+				// 'https://npktester-api.onrender.com/predict'
+				'http://localhost:5000/predict',
+				{
+					features: [data.nitrogen, data.phosphorus, data.potassium],
+				}
+			);
 
-		if (!res.status == 200) {
-			setResult(null);
-			setRecommendation(null);
-		} else {
 			if (res.data.needed_nutrients) {
 				setResult(res.data.prediction);
-				setRecommendation(`
-					( Urea: ${res.data?.needed_nutrients.Urea} kg/ha, TSP: ${res.data?.needed_nutrients.TSP} kg/ha, MOP: ${res.data?.needed_nutrients.MOP} kg/ha, )`);
+				const nutrients = Object.entries(res.data.needed_nutrients).map(
+					([name, value]) => ({ name, value })
+				);
+				setRecommendation(nutrients);
+				console.log('Recommendation:', nutrients);
+			} else {
+				setResult(null);
+				setRecommendation(null);
 			}
-			setResult(res.data.prediction);
+		} catch (err) {
+			console.error(err);
+			setError('Prediction failed');
+		} finally {
+			setIsPredicting(false);
 		}
 	};
 
 	const fetchData = async () => {
-		setIsFetching(true);
+		try {
+			setIsFetching(true);
+			setResult(null);
+			setRecommendation(null);
+			setError(null);
 
-		setResult(null);
-		setRecommendation(null);
-		setError(null);
-		const res = await axios.get(
-			'https://npktester-api.onrender.com/sensordata'
-		);
-		console.log(res.data);
-		setIsFetching(false);
-
-		if (!res.status == 200) {
-			setData([]);
-		} else {
-			setData(res.data); // Update state with fetched data
+			const res = await axios.get(
+				// 'https://npktester-api.onrender.com/sensordata'
+				'http://localhost:5000/sensordata'
+			);
+			if (res.status === 200) {
+				setData(res.data);
+			} else {
+				setData([]);
+				setError('Failed to fetch data');
+			}
+		} catch (err) {
+			console.error(err);
+			setError('Sensor fetch failed');
+		} finally {
+			setIsFetching(false);
 		}
 	};
 
-	const chartData = [
-		{ name: 'Nitrogen', value: data.nitrogen || 0 },
-		{ name: 'Phosphorus', value: data.phosphorus || 0 },
-		{ name: 'Potassium', value: data.potassium || 0 },
+	const nutrientData = [
+		{ name: 'Nitrogen', value: data.nitrogen || 0, unit: 'mg/kg' },
+		{ name: 'Phosphorus', value: data.phosphorus || 0, unit: 'mg/kg' },
+		{ name: 'Potassium', value: data.potassium || 0, unit: 'mg/kg' },
 	];
+
+	const maxNutrient = 255;
+	const imageUrl = result?.toLowerCase() && plantImages[result.toLowerCase()];
+
+	const chartData = [{ name: 'Soil Moisture', value: data.soil || 0 }];
+
+	const nutrientColors = {
+		MOP: 'bg-success', // Potassium (Muriate of Potash)
+		TSP: 'bg-warning', // Phosphorus (Triple Super Phosphate)
+		Urea: 'bg-info', // Nitrogen
+	};
+
+	const nutrientOrder = ['Urea', 'TSP', 'MOP'];
+
+	const sortedRecommendation = Array.isArray(recommendation)
+		? [...recommendation].sort(
+				(a, b) => nutrientOrder.indexOf(a.name) - nutrientOrder.indexOf(b.name)
+		  )
+		: [];
+
 	return (
-		<div className='p-2'>
-			<div className=''>
-				<button
-					onClick={fetchData}
-					className='btn btn-primary px-4 py-2 rounded'>
-					{isFetching ? 'Fetching Data...' : 'Fetch Data'}
-				</button>
+		<div className='p-4 max-w-3xl mx-auto'>
+			<button onClick={fetchData} className='btn btn-primary px-4 py-2 rounded'>
+				{isFetching ? 'Fetching Data...' : 'Fetch Data'}
+			</button>
 
-				{error && (
-					<div className='mt-2 alert alert-danger'>
-						<p className='mb-0'>Error: {error}</p>
+			{error && (
+				<div className='mt-2 alert alert-danger'>
+					<p className='mb-0'>Error: {error}</p>
+				</div>
+			)}
+
+			{data?.nitrogen !== undefined && (
+				<div className='mt-6'>
+					<h3 className='text-lg font-medium mt-4'>Sensor Readings</h3>
+
+					<div className='flex flex-wrap gap-6 text-center mt-2 bg-black text-white py-4 rounded-lg shadow-md'>
+						{nutrientData.map((nutrient, idx) => (
+							<div key={idx} className='flex flex-col items-center'>
+								<p className='text-sm mb-2 text-gray-600'>
+									{nutrient.name} Value ({nutrient.unit})
+								</p>
+								<GaugeChart
+									id={`gauge-${idx}`}
+									nrOfLevels={30}
+									arcsLength={[0.5, 0.3, 0.2]}
+									colors={['#facc15', '#34d399', '#059669']}
+									percent={nutrient.value / maxNutrient}
+									arcPadding={0.03}
+									hideText
+								/>
+								<div className='text-3xl font-semibold text-green-600 mt-[-20px]'>
+									{nutrient.value}
+								</div>
+								<div className='text-xs text-gray-500 mt-[-8px]'>
+									0 &nbsp;&nbsp;&nbsp;&nbsp; {maxNutrient}
+								</div>
+							</div>
+						))}
 					</div>
-				)}
+					{chartData.map((nutrient, idx) => {
+						const isSoilMoisture = nutrient.name === 'Soil Moisture';
+						const value =
+							nutrient.value && !isNaN(nutrient.value) ? nutrient.value : 0; // Ensure valid value, default to 0
 
-				{data ? (
-					<>
-						{/* Sensor Data */}
-						{data && data.nitrogen !== undefined && (
-							<>
-								<h3 className='text-lg font-medium mb-2'>Sensor Readings</h3>
-								<ul className='mb-4'>
-									<li>
-										<strong>Nitrogen:</strong> {data.nitrogen}
-									</li>
-									<li>
-										<strong>Phosphorus:</strong> {data.phosphorus}
-									</li>
-									<li>
-										<strong>Potassium:</strong> {data.potassium}
-									</li>
-									<li>
-										<strong>Soil Moisture:</strong> {data.soil}
-									</li>
-								</ul>
+						const barData = [{ name: nutrient.name, value }];
 
-								{/* Chart */}
-								<ResponsiveContainer width='100%' height={250}>
-									<BarChart data={chartData}>
-										<CartesianGrid strokeDasharray='3 3' />
-										<XAxis dataKey='name' />
-										<YAxis />
+						return (
+							<div
+								key={idx}
+								className='flex flex-col items-center min-w-[250px]'>
+								<p className='text-sm mb-2 text-gray-400 mt-4'>
+									{nutrient.name} Value ({nutrient.unit || 'mg/kg'})
+								</p>
+
+								<ResponsiveContainer width={200} height={150}>
+									<BarChart data={barData} layout='horizontal'>
+										<CartesianGrid strokeDasharray='3 3' stroke='#f9fafb' />
+										<YAxis type='number' domain={[0, 1500]} />
+										<XAxis type='category' dataKey='name' />
 										<Tooltip />
-										<Bar dataKey='value' fill='#82ca9d' />
+										<Bar
+											dataKey='value'
+											fill={isSoilMoisture ? '#facc15' : '#34d399'}
+											background={{ fill: '#d1fae5' }} // Corrected background fill
+											radius={[6, 6, 6, 6]}>
+											<LabelList
+												dataKey='value'
+												position='center'
+												fill='#059669'
+												content={({ x, y, width, height, value }) => (
+													<text
+														x={x + width / 2} // Centers the text in the bar
+														y={y + height / 2} // Centers the text vertically
+														textAnchor='middle' // Centers the text horizontally
+														dominantBaseline='middle' // Vertically centers the text
+														fill='#059669' // Color of the text
+														fontSize={12} // Adjust the font size
+														fontWeight='bold'>
+														{value}
+													</text>
+												)}
+											/>
+										</Bar>
 									</BarChart>
 								</ResponsiveContainer>
-							</>
-						)}
-					</>
-				) : (
-					<p>No data found</p>
-				)}
-			</div>
-			<div className='mt-5'>
-				{data.nitrogen && (
+
+								{isSoilMoisture && (
+									<div className='text-xs mt-1 text-yellow-400 font-medium'>
+										1100–1200 high sensor accuracy
+									</div>
+								)}
+							</div>
+						);
+					})}
+				</div>
+			)}
+
+			{data.nitrogen && (
+				<div className='mt-5'>
 					<button
 						onClick={handlePredict}
-						className='btn btn-success px-4 py-2 rounded'>
-						{isPredicting ? 'Calculating...' : 'Recommended Plant'}
+						disabled={isPredicting}
+						className={`btn btn-success px-4 py-2 rounded ${
+							isPredicting ? 'opacity-50 cursor-not-allowed' : ''
+						}`}>
+						{isPredicting ? 'Calculating...' : 'Recommended Crop'}
 					</button>
-				)}
-				{result && !isPredicting && (
-					<div className='mt-4 alert alert-info'>
-						<p>
-							<strong>Recommended plant for this soil:</strong> {result}
-							<br />
-							{recommendation && (
-								<span>
-									<strong>Needed Nutrients:</strong> {recommendation}
-								</span>
-							)}
-						</p>
+				</div>
+			)}
+
+			{result && !isPredicting && (
+				<div className='mt-5'>
+					<h3 className='text-lg font-medium text-center'>
+						Recommended Crop: {result}
+					</h3>
+					<div className='mt-3'>
+						{imageUrl && (
+							<motion.img
+								src={imageUrl}
+								alt={result}
+								className='rounded-lg'
+								whileHover={{ scale: 1.1 }}
+								transition={{ duration: 0.3 }}
+							/>
+						)}
+						{recommendation && (
+							<div className='d-flex flex-wrap justify-content-center gap-3 mt-4'>
+								{sortedRecommendation.length > 0 ? (
+									sortedRecommendation.map((item, index) => (
+										<span
+											key={index}
+											className={`badge rounded-pill ${
+												nutrientColors[item.name] || 'bg-secondary'
+											} text-light px-4 py-2`}>
+											{item.name}: {item.value} kg/ha
+										</span>
+									))
+								) : (
+									<p className='text-center text-muted'>
+										No recommendations available.
+									</p>
+								)}
+							</div>
+						)}
 					</div>
-				)}
-			</div>
+				</div>
+			)}
 		</div>
 	);
 };
