@@ -11,7 +11,8 @@ import {
 	LabelList,
 } from 'recharts';
 import { motion } from 'framer-motion';
-import GaugeChart from 'react-gauge-chart';
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 const plantImages = {
 	rice: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Rice_Harvest_2020_-_50248678242.jpg',
@@ -140,28 +141,56 @@ const Prediction = () => {
 					<h3 className='text-lg font-medium mt-4'>Sensor Readings</h3>
 
 					<div className='flex flex-wrap gap-6 text-center mt-2 bg-black text-white py-4 rounded-lg shadow-md'>
-						{nutrientData.map((nutrient, idx) => (
-							<div key={idx} className='flex flex-col items-center'>
-								<p className='text-sm mb-2 text-gray-600'>
-									{nutrient.name} Value ({nutrient.unit})
-								</p>
-								<GaugeChart
-									id={`gauge-${idx}`}
-									nrOfLevels={30}
-									arcsLength={[0.5, 0.3, 0.2]}
-									colors={['#facc15', '#34d399', '#059669']}
-									percent={nutrient.value / maxNutrient}
-									arcPadding={0.03}
-									hideText
-								/>
-								<div className='text-3xl font-semibold text-green-600 mt-[-20px]'>
-									{nutrient.value}
+						{nutrientData.map((nutrient, idx) => {
+							const percentage = (nutrient.value / maxNutrient) * 100; // Calculate percentage for each nutrient
+
+							return (
+								<div
+									key={idx}
+									className='d-flex flex-column align-items-center'>
+									<p className='text-sm mb-2 text-white'>
+										{nutrient.name} Value ({nutrient.unit})
+									</p>
+									<div
+										style={{
+											width: 80,
+											height: 80,
+											display: 'flex',
+											justifyContent: 'center',
+											alignItems: 'center',
+										}}>
+										<CircularProgressbar
+											value={percentage} // Use the calculated percentage for each nutrient
+											text={`${nutrient.value} kg/ha`}
+											strokeWidth={10}
+											styles={{
+												path: {
+													stroke:
+														percentage <= 33
+															? '#facc15'
+															: percentage <= 66
+															? '#34d399'
+															: '#059669', // Conditional color based on percentage
+												},
+												trail: {
+													stroke: '#e6e6e6', // Faint background for the gauge
+												},
+												text: {
+													fill: 'white', // Text color
+													fontSize: '12px',
+													fontWeight: 'bold',
+												},
+											}}
+										/>
+									</div>
+									<div className='mt-2 text-center'>
+										<div className='small text-white'>
+											0 &nbsp;&nbsp;&nbsp;&nbsp; {maxNutrient}
+										</div>
+									</div>
 								</div>
-								<div className='text-xs text-gray-500 mt-[-8px]'>
-									0 &nbsp;&nbsp;&nbsp;&nbsp; {maxNutrient}
-								</div>
-							</div>
-						))}
+							);
+						})}
 					</div>
 					{chartData.map((nutrient, idx) => {
 						const isSoilMoisture = nutrient.name === 'Soil Moisture';
@@ -174,7 +203,7 @@ const Prediction = () => {
 							<div
 								key={idx}
 								className='flex flex-col items-center min-w-[250px]'>
-								<p className='text-sm mb-2 text-gray-400 mt-4'>
+								<p className='text-sm mb-2 text-gray-400 mt-4 text-center'>
 									{nutrient.name} Value ({nutrient.unit || 'mg/kg'})
 								</p>
 
@@ -210,8 +239,8 @@ const Prediction = () => {
 									</BarChart>
 								</ResponsiveContainer>
 
-								{isSoilMoisture && (
-									<div className='text-xs mt-1 text-yellow-400 font-medium'>
+								{value >= 1100 && value <= 1200 && (
+									<div className='text-xs mt-1 text-success font-medium text-center'>
 										1100–1200 high sensor accuracy
 									</div>
 								)}
