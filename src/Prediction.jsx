@@ -161,7 +161,7 @@ const Prediction = () => {
 										}}>
 										<CircularProgressbar
 											value={percentage} // Use the calculated percentage for each nutrient
-											text={`${nutrient.value} kg/ha`}
+											text={`${nutrient.value} mg/kg`}
 											strokeWidth={10}
 											styles={{
 												path: {
