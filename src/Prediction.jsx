@@ -105,7 +105,7 @@ const Prediction = () => {
 		{ name: 'Potassium', value: data.potassium || 0, unit: 'mg/kg' },
 	];
 
-	const maxNutrient = 255;
+	const maxNutrient = 800;
 	const imageUrl = result?.toLowerCase() && plantImages[result.toLowerCase()];
 
 	const chartData = [{ name: 'Soil Moisture', value: data.soil || 0 }];
@@ -238,12 +238,13 @@ const Prediction = () => {
 										</Bar>
 									</BarChart>
 								</ResponsiveContainer>
-
-								{value >= 1100 && value <= 1200 && (
-									<div className='text-xs mt-1 text-success font-medium text-center'>
-										1100–1200 high sensor accuracy
-									</div>
-								)}
+								<div className='text-xs mt-1 text-success font-medium text-center'>
+									{value >= 1100 ? (
+										<span>High sensor accuracy</span>
+									) : (
+										<span>Low sensor accuracy</span>
+									)}
+								</div>
 							</div>
 						);
 					})}
@@ -275,6 +276,12 @@ const Prediction = () => {
 								alt={result}
 								className='rounded-lg'
 								whileHover={{ scale: 1.1 }}
+								style={{
+									maxWidth: '300px',
+									maxHeight: '300px',
+									width: '100%',
+									height: 'auto',
+								}} // Restrict size
 								transition={{ duration: 0.3 }}
 							/>
 						)}
