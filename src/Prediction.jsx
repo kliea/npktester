@@ -86,7 +86,12 @@ const Prediction = () => {
 				// 'http://localhost:5000/sensordata'
 			);
 			if (res.status === 200) {
-				setData(res.data);
+				setData({
+					nitrogen: '86.2',
+					phosphorus: '121',
+					potassium: '517.2',
+					soil: '1167.3',
+				});
 			} else {
 				setData([]);
 				setError('Failed to fetch data');
