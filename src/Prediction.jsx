@@ -87,10 +87,10 @@ const Prediction = () => {
 			);
 			if (res.status === 200) {
 				setData({
-					nitrogen: 38.3,
-					phosphorus: 58.7,
-					potassium: 128.3,
-					soil: 1180,
+					nitrogen: 97,
+					phosphorus: 96.3,
+					potassium: 519.6,
+					soil: 1199,
 				});
 			} else {
 				setData([]);
